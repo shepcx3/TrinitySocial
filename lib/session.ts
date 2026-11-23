@@ -8,6 +8,7 @@ export type CurrentUser = {
   emailVerified: boolean;
   faculty: string | null;
   eTransferEmail: string | null;
+  role: string;
 };
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -21,6 +22,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     emailVerified: Boolean(u.emailVerified),
     faculty: (u.faculty as string | null) ?? null,
     eTransferEmail: (u.eTransferEmail as string | null) ?? null,
+    role: (u.role as string) ?? "user",
   };
 }
 
@@ -32,5 +34,11 @@ export async function requireVerifiedUser(): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) throw new Error("UNAUTHENTICATED");
   if (!user.emailVerified) throw new Error("UNVERIFIED");
+  return user;
+}
+
+export async function requireAdmin(): Promise<CurrentUser> {
+  const user = await requireVerifiedUser();
+  if (user.role !== "admin" && user.role !== "ADMIN") throw new Error("FORBIDDEN");
   return user;
 }

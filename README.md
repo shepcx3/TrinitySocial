@@ -26,11 +26,26 @@ Open http://localhost:3000.
 
 `DEV_SKIP_EMAIL_VERIFICATION=true` marks new accounts as verified and skips sending verification emails. It must be off in production. With it off, verification emails are logged to the console by `ConsoleEmailSender` (`lib/email.ts`); swap in a real provider by calling `setEmailSender`.
 
+## Admins
+
+Admins confirm e-Transfer payments at `/admin/payments`. Sign up first, then promote the account:
+
+```bash
+npm run make-admin -- you@example.com
+```
+
+## Payment flow (e-Transfer only)
+
+1. Buyer reserves tickets. Stock is held on the order.
+2. Buyer sends an e-Transfer to the seller's `eTransferEmail`, using the order's `ticketCode` as the memo, then clicks "I've sent it".
+3. An admin checks the bank and confirms at `/admin/payments`. The order becomes `PAID` and the QR ticket appears under My Tickets.
+4. Buyers can cancel while `PENDING_PAYMENT`, which returns the stock.
+
 ## Architecture notes
 
 - `lib/auth.ts` — better-auth config (email + password, verification).
 - `lib/session.ts` — `requireVerifiedUser()` must guard every verified-only server action (create listing, buy).
-- `lib/payments.ts` (planned) — e-Transfer flow: buyer reserves → sends e-Transfer to the seller's `eTransferEmail` with the order's `ticketCode` as the message → marks sent → seller confirms receipt → order `PAID` and the ticket/QR is released.
+- `lib/orders.ts` — reserve / mark sent / cancel / admin confirm. Stock changes are atomic.
 - `lib/email.ts` — email sender interface.
 - `prisma/schema.prisma` — User, Session/Account/Verification (better-auth), Event, Listing, Order, Review, Report.
 
@@ -40,5 +55,6 @@ Open http://localhost:3000.
 - [x] Auth (with dev verification bypass)
 - [ ] Event browse / search / filter
 - [ ] Listing creation + seller dashboard
-- [ ] e-Transfer checkout + QR tickets + My Tickets
+- [x] e-Transfer checkout (reserve → mark sent → admin confirms) + QR tickets + My Tickets
+- [ ] Seller dashboard (listing create/edit, sales view)
 - [ ] Reviews, reports, polish

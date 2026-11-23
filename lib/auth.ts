@@ -40,6 +40,7 @@ export const auth = betterAuth({
     additionalFields: {
       faculty: { type: "string", required: false, input: true },
       eTransferEmail: { type: "string", required: false, input: true },
+      role: { type: "string", required: false, input: false },
     },
   },
 });

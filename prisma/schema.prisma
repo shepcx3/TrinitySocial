@@ -77,6 +77,8 @@ model User {
   bio           String?
   // Where buyers send e-Transfers for this seller's orders (sellers only)
   eTransferEmail String?
+  // "user" or "admin". Admins confirm e-Transfer payments.
+  role          String    @default("user")
 
   sessions      Session[]
   accounts      Account[]
