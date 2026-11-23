@@ -46,7 +46,7 @@ export default async function TicketsPage() {
                 <p>Send <strong>{formatCad(o.totalCents)}</strong> by e-Transfer to <strong>{o.listing.seller.eTransferEmail ?? "the seller (contact on request)"}</strong>.</p>
                 <p>Message / memo: <code className="font-mono font-bold">{o.ticketCode}</code></p>
                 <div className="flex gap-2">
-                  <form action={markSent.bind(null, o.id)}><button className="rounded-lg bg-qu-blue px-3 py-1.5 font-semibold text-white">I've sent it</button></form>
+                  <form action={markSent.bind(null, o.id)}><button className="rounded-lg bg-qu-blue px-3 py-1.5 font-semibold text-white">I&apos;ve sent it</button></form>
                   <form action={cancelMyOrder.bind(null, o.id)}><button className="rounded-lg border border-slate-300 px-3 py-1.5">Cancel</button></form>
                 </div>
               </div>
