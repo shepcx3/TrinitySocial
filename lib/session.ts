@@ -1,0 +1,35 @@
+import { headers } from "next/headers";
+import { auth } from "./auth";
+import { isQueensEmail } from "./queens";
+
+export type CurrentUser = {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  faculty: string | null;
+};
+
+export async function getCurrentUser(): Promise<CurrentUser | null> {
+  const result = await auth.api.getSession({ headers: await headers() });
+  if (!result) return null;
+  const u = result.user as CurrentUser & Record<string, unknown>;
+  return {
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    emailVerified: Boolean(u.emailVerified),
+    faculty: (u.faculty as string | null) ?? null,
+  };
+}
+
+/**
+ * Gate for verified-only actions (create listing, buy). Call this in every
+ * server action / route handler — never rely on the UI alone.
+ */
+export async function requireVerifiedUser(): Promise<CurrentUser> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("UNAUTHENTICATED");
+  if (!user.emailVerified || !isQueensEmail(user.email)) throw new Error("UNVERIFIED");
+  return user;
+}

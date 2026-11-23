@@ -1,0 +1,227 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Faculty {
+  ARTSCI
+  ENGINEERING
+  COMMERCE
+  HEALTH_SCI
+  LAW
+  GRAD
+  ALUMNI
+}
+
+enum EventCategory {
+  HOMECOMING
+  FORMAL
+  FROSH
+  ENGINEERING_EVENT
+  CLUB_EVENT
+  SPORTS
+  CONCERTS
+  CHARITY
+  OTHER
+}
+
+enum OrganizerType {
+  CLUB
+  STUDENT
+}
+
+enum TicketType {
+  GA
+  SEATED
+  VIP
+}
+
+enum ListingStatus {
+  ACTIVE
+  SOLD_OUT
+  CANCELLED
+  REMOVED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+// ---- better-auth tables ----
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Queen's-specific profile
+  faculty       Faculty?
+  bio           String?
+
+  sessions      Session[]
+  accounts      Account[]
+  listings      Listing[]
+  orders        Order[]
+  reviewsGiven  Review[]  @relation("reviewer")
+  reviewsGot    Review[]  @relation("seller")
+  reports       Report[]
+  events        Event[]   @relation("organizer")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+// ---- Marketplace tables ----
+
+model Event {
+  id            String        @id @default(cuid())
+  title         String
+  description   String
+  venue         String
+  startsAt      DateTime
+  category      EventCategory
+  bannerUrl     String?
+  organizerType OrganizerType @default(STUDENT)
+  organizerName String
+  organizerId   String?
+  organizer     User?         @relation("organizer", fields: [organizerId], references: [id], onDelete: SetNull)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  listings Listing[]
+
+  @@index([startsAt])
+  @@index([category])
+}
+
+model Listing {
+  id          String        @id @default(cuid())
+  eventId     String
+  event       Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sellerId    String
+  seller      User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  priceCents  Int
+  quantity    Int           // remaining tickets available
+  ticketType  TicketType    @default(GA)
+  section     String?
+  row         String?
+  seat        String?
+  notes       String?
+  status      ListingStatus @default(ACTIVE)
+  expiresAt   DateTime      // = event.startsAt; auto-expire after event
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  orders  Order[]
+  reports Report[]
+
+  @@index([eventId, status])
+  @@index([sellerId])
+  @@index([expiresAt])
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  buyerId      String
+  buyer        User        @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  listingId    String
+  listing      Listing     @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  quantity     Int
+  totalCents   Int
+  status       OrderStatus @default(PENDING)
+  paymentRef   String?
+  ticketCode   String      @unique
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  review Review?
+
+  @@index([buyerId])
+  @@index([listingId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reviewerId String
+  reviewer  User     @relation("reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  sellerId  String
+  seller    User     @relation("seller", fields: [sellerId], references: [id], onDelete: Cascade)
+  rating    Int      // 1..5, validated in app layer
+  body      String?
+  createdAt DateTime @default(now())
+
+  @@index([sellerId])
+}
+
+model Report {
+  id         String       @id @default(cuid())
+  listingId  String
+  listing    Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reason     String
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now())
+
+  @@index([listingId])
+}

@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+:root {
+  --qu-blue: #002452;
+  --qu-gold: #fabc00;
+  --qu-red: #c8102e;
+  --background: #ffffff;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-qu-blue: var(--qu-blue);
+  --color-qu-gold: var(--qu-gold);
+  --color-qu-red: var(--qu-red);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
