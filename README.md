@@ -1,12 +1,12 @@
 # Queen's U Tix
 
-A ticket marketplace exclusive to the Queen's University community. Students resell tickets they can't use; clubs and organizers list official inventory. Only verified @queensu.ca accounts can list or buy.
+A ticket marketplace for Queen's events. Students resell tickets they can't use; clubs and organizers list official inventory. Payments are **e-Transfer only**: the platform never holds funds.
 
 ## Stack
 
 - Next.js (App Router) + TypeScript, Tailwind CSS
 - Prisma + PostgreSQL
-- better-auth (email + password, @queensu.ca gate, email verification)
+- better-auth (email + password, email verification)
 - Zod for validation
 
 ## Local setup
@@ -16,7 +16,7 @@ npm install
 cp .env.example .env          # set BETTER_AUTH_SECRET to a 32+ char random string
 docker compose up -d          # or run a local Postgres and set DATABASE_URL
 npx prisma migrate dev
-npx prisma db seed            # sample Queen's events and listings
+npx prisma db seed            # sample events and listings
 npm run dev
 ```
 
@@ -28,17 +28,17 @@ Open http://localhost:3000.
 
 ## Architecture notes
 
-- `lib/auth.ts` — better-auth config. Rejects non-@queensu.ca emails at the database hook layer, so the gate is enforced at the API, not just the UI.
+- `lib/auth.ts` — better-auth config (email + password, verification).
 - `lib/session.ts` — `requireVerifiedUser()` must guard every verified-only server action (create listing, buy).
+- `lib/payments.ts` (planned) — e-Transfer flow: buyer reserves → sends e-Transfer to the seller's `eTransferEmail` with the order's `ticketCode` as the message → marks sent → seller confirms receipt → order `PAID` and the ticket/QR is released.
 - `lib/email.ts` — email sender interface.
-- `lib/payments.ts` (planned) — `PaymentProvider` interface; a mock implementation for the simulated checkout, with Stripe to drop in later.
 - `prisma/schema.prisma` — User, Session/Account/Verification (better-auth), Event, Listing, Order, Review, Report.
 
 ## Status
 
 - [x] Scaffold, DB schema, seed data
-- [x] Auth + @queensu.ca gate (with dev bypass)
+- [x] Auth (with dev verification bypass)
 - [ ] Event browse / search / filter
 - [ ] Listing creation + seller dashboard
-- [ ] Simulated checkout + QR tickets + My Tickets
+- [ ] e-Transfer checkout + QR tickets + My Tickets
 - [ ] Reviews, reports, polish

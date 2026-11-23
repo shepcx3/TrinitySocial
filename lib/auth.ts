@@ -1,12 +1,10 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { APIError } from "better-auth/api";
 import { prisma } from "./db";
 import { getEmailSender } from "./email";
-import { isQueensEmail } from "./queens";
 
-// DEV ONLY: lets you sign up and buy/sell without clicking a verification link.
-// Never enable in production — it marks every new account as verified.
+// DEV ONLY: marks new accounts as verified and skips verification emails.
+// Never enable in production.
 const devBypass = process.env.DEV_SKIP_EMAIL_VERIFICATION === "true";
 
 export const auth = betterAuth({
@@ -25,28 +23,23 @@ export const auth = betterAuth({
       await getEmailSender().send({
         to: user.email,
         subject: "Verify your Queen's U Tix account",
-        text: `Welcome! Verify your @queensu.ca email to start buying and selling tickets:\n\n${url}`,
+        text: `Verify your email to start buying and selling tickets:\n\n${url}`,
       });
     },
   },
   databaseHooks: {
     user: {
       create: {
-        before: async (user) => {
-          // Enforced at the auth layer: only Queen's addresses can create accounts.
-          if (!isQueensEmail(user.email)) {
-            throw new APIError("BAD_REQUEST", {
-              message: "Sign up with your @queensu.ca email address.",
-            });
-          }
-          return { data: { ...user, emailVerified: devBypass } };
-        },
+        before: async (user) => ({
+          data: { ...user, emailVerified: devBypass },
+        }),
       },
     },
   },
   user: {
     additionalFields: {
       faculty: { type: "string", required: false, input: true },
+      eTransferEmail: { type: "string", required: false, input: true },
     },
   },
 });

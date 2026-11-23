@@ -21,19 +21,19 @@ async function main() {
   // these rows exist so listings have realistic owners.
   const sellers = await Promise.all([
     prisma.user.upsert({
-      where: { email: "sam.parker@queensu.ca" },
+      where: { email: "sam.parker@example.com" },
       update: {},
-      create: { name: "Sam Parker", email: "sam.parker@queensu.ca", emailVerified: true, faculty: Faculty.ARTSCI },
+      create: { name: "Sam Parker", email: "sam.parker@example.com", emailVerified: true, faculty: Faculty.ARTSCI, eTransferEmail: "sam.parker@example.com" },
     }),
     prisma.user.upsert({
-      where: { email: "priya.n@queensu.ca" },
+      where: { email: "priya.n@example.com" },
       update: {},
-      create: { name: "Priya N.", email: "priya.n@queensu.ca", emailVerified: true, faculty: Faculty.ENGINEERING },
+      create: { name: "Priya N.", email: "priya.n@example.com", emailVerified: true, faculty: Faculty.ENGINEERING, eTransferEmail: "priya.n@example.com" },
     }),
     prisma.user.upsert({
-      where: { email: "devon.k@queensu.ca" },
+      where: { email: "devon.k@example.com" },
       update: {},
-      create: { name: "Devon K.", email: "devon.k@queensu.ca", emailVerified: true, faculty: Faculty.COMMERCE },
+      create: { name: "Devon K.", email: "devon.k@example.com", emailVerified: true, faculty: Faculty.COMMERCE, eTransferEmail: "devon.k@example.com" },
     }),
   ]);
 

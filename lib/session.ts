@@ -1,6 +1,5 @@
 import { headers } from "next/headers";
 import { auth } from "./auth";
-import { isQueensEmail } from "./queens";
 
 export type CurrentUser = {
   id: string;
@@ -8,6 +7,7 @@ export type CurrentUser = {
   email: string;
   emailVerified: boolean;
   faculty: string | null;
+  eTransferEmail: string | null;
 };
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -20,6 +20,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     email: u.email,
     emailVerified: Boolean(u.emailVerified),
     faculty: (u.faculty as string | null) ?? null,
+    eTransferEmail: (u.eTransferEmail as string | null) ?? null,
   };
 }
 
@@ -30,6 +31,6 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 export async function requireVerifiedUser(): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) throw new Error("UNAUTHENTICATED");
-  if (!user.emailVerified || !isQueensEmail(user.email)) throw new Error("UNVERIFIED");
+  if (!user.emailVerified) throw new Error("UNVERIFIED");
   return user;
 }

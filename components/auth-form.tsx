@@ -32,7 +32,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       } as Parameters<typeof authClient.signUp.email>[0]);
       setPending(false);
       if (error) return setError(error.message ?? "Could not create account.");
-      setNotice("Check your @queensu.ca inbox for a verification link.");
+      setNotice("Check your inbox for a verification link.");
       router.refresh();
       return;
     }
@@ -64,12 +64,12 @@ export function AuthForm({ mode }: { mode: Mode }) {
         </>
       )}
       <label className="block">
-        <span className="text-sm font-medium text-qu-blue">Queen&apos;s email</span>
+        <span className="text-sm font-medium text-qu-blue">Email</span>
         <input
           name="email"
           type="email"
           required
-          placeholder="you@queensu.ca"
+          placeholder="you@example.com"
           className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
         />
       </label>

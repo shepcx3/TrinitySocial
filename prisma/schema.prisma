@@ -47,11 +47,12 @@ enum ListingStatus {
   REMOVED
 }
 
+// Payments are e-Transfer only. The platform never holds funds.
 enum OrderStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
+  PENDING_PAYMENT   // buyer reserved tickets, has not yet sent e-Transfer
+  PAYMENT_SENT      // buyer says they sent the e-Transfer
+  PAID              // seller confirmed receipt; ticket is released
+  CANCELLED         // expired or cancelled before payment was confirmed
 }
 
 enum ReportStatus {
@@ -71,9 +72,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Queen's-specific profile
+  // Profile
   faculty       Faculty?
   bio           String?
+  // Where buyers send e-Transfers for this seller's orders (sellers only)
+  eTransferEmail String?
 
   sessions      Session[]
   accounts      Account[]
@@ -186,9 +189,10 @@ model Order {
   listing      Listing     @relation(fields: [listingId], references: [id], onDelete: Restrict)
   quantity     Int
   totalCents   Int
-  status       OrderStatus @default(PENDING)
-  paymentRef   String?
-  ticketCode   String      @unique
+  status       OrderStatus @default(PENDING_PAYMENT)
+  ticketCode   String      @unique   // also used as the e-Transfer message/memo
+  paymentSentAt DateTime?
+  paidAt       DateTime?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
